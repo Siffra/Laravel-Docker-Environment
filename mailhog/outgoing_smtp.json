@@ -1,0 +1,11 @@
+{
+    "SendGrid": {
+        "name": "SendGrid",
+        "host": "smtp.sendgrid.net",
+        "port": "587",
+        "email": "bot@luiz-pc.local",
+        "username": "apikey",
+        "password": "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",
+        "mechanism": "PLAIN"
+    }
+}

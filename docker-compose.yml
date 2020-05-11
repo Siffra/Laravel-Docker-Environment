@@ -1,0 +1,212 @@
+version: '3'
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+services:
+
+  ### Redis ################################################
+  redis:
+    build: ./redis
+    restart: always
+    hostname: redis
+    volumes:
+      - ${DATA_PATH_HOST}/redis:/data
+      - ./redis/redis.conf:/etc/redis.conf
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - backend
+
+  ### REDISWEBUI ################################################
+  redis-webui:
+    build:
+      context: ./redis-webui
+    restart: always
+    hostname: redis-webui
+    environment:
+      - ADMIN_USER=${REDIS_WEBUI_USERNAME}
+      - ADMIN_PASS=${REDIS_WEBUI_PASSWORD}
+      - REDIS_1_HOST=${REDIS_WEBUI_CONNECT_HOST}
+      - REDIS_1_PORT=${REDIS_WEBUI_CONNECT_PORT}
+    networks:
+      - backend
+    ports:
+      - "${REDIS_WEBUI_PORT}:80"
+    depends_on:
+      - redis
+
+  ### PHP-FPM ##############################################
+  php-fpm:
+    build:
+      context: ./php-fpm
+      args:
+        - PHP_VERSION=${PHP_VERSION}
+        - BASE_IMAGE_TAG_PREFIX=${WORKSPACE_BASE_IMAGE_TAG_PREFIX}
+        - INSTALL_ADDITIONAL_LOCALES=${PHP_FPM_INSTALL_ADDITIONAL_LOCALES}
+        - ADDITIONAL_LOCALES=${PHP_FPM_ADDITIONAL_LOCALES}
+        - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
+        - INSTALL_PGSQL=${PHP_FPM_INSTALL_PGSQL}
+        - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
+        - PUID=${PHP_FPM_PUID}
+        - PGID=${PHP_FPM_PGID}
+        - LOCALE=${PHP_FPM_DEFAULT_LOCALE}
+        - TZ=${PHP_FPM_TIMEZONE}
+    hostname: php-fpm
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+    expose:
+      - "9000"
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  ### NGINX Server #########################################
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        - PHP_UPSTREAM_CONTAINER=${NGINX_PHP_UPSTREAM_CONTAINER}
+        - PHP_UPSTREAM_PORT=${NGINX_PHP_UPSTREAM_PORT}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    hostname: nginx
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+      - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+      - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+    ports:
+      - "${NGINX_HOST_HTTP_PORT}:80"
+      - "${NGINX_HOST_HTTPS_PORT}:443"
+    depends_on:
+      - php-fpm
+    networks:
+      - frontend
+      - backend
+
+  ### Workspace ############################################
+  workspace:
+    build:
+      context: workspace
+      args:
+        - PHP_VERSION=${PHP_VERSION}
+        - SHELL_OH_MY_ZSH=${SHELL_OH_MY_ZSH}
+        - INSTALL_PRESTISSIMO=${WORKSPACE_INSTALL_PRESTISSIMO}
+        - INSTALL_IMAGEMAGICK=${WORKSPACE_INSTALL_IMAGEMAGICK}
+        - INSTALL_PG_CLIENT=${WORKSPACE_INSTALL_PG_CLIENT}
+        - INSTALL_PING=${WORKSPACE_INSTALL_PING}
+        - INSTALL_PHPREDIS=${WORKSPACE_INSTALL_PHPREDIS}
+        - INSTALL_SWOOLE=${WORKSPACE_INSTALL_SWOOLE}
+        - PUID=${WORKSPACE_PUID}
+        - PGID=${WORKSPACE_PGID}
+        - TZ=${WORKSPACE_TIMEZONE}
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    hostname: workspace
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+    networks:
+      - backend
+      - frontend
+    tty: true
+
+  ### Laravel Horizon ############################################
+  laravel-horizon:
+    build:
+      context: ./laravel-horizon
+      args:
+        - PHP_VERSION=${PHP_VERSION}
+        - INSTALL_BZ2=${LARAVEL_HORIZON_INSTALL_BZ2}
+        - INSTALL_GD=${LARAVEL_HORIZON_INSTALL_GD}
+        - INSTALL_GMP=${LARAVEL_HORIZON_INSTALL_GMP}
+        - INSTALL_PGSQL=${PHP_FPM_INSTALL_PGSQL}
+        - INSTALL_ZIP_ARCHIVE=${LARAVEL_HORIZON_INSTALL_ZIP_ARCHIVE}
+        - INSTALL_BCMATH=${PHP_FPM_INSTALL_BCMATH}
+        - INSTALL_MEMCACHED=${PHP_FPM_INSTALL_MEMCACHED}
+        - INSTALL_SOCKETS=${LARAVEL_HORIZON_INSTALL_SOCKETS}
+        - INSTALL_YAML=${LARAVEL_HORIZON_INSTALL_YAML}
+        - INSTALL_PHPREDIS=${LARAVEL_HORIZON_INSTALL_PHPREDIS}
+        - INSTALL_MONGO=${LARAVEL_HORIZON_INSTALL_MONGO}
+        - INSTALL_FFMPEG=${LARAVEL_HORIZON_INSTALL_FFMPEG}
+        - PUID=${LARAVEL_HORIZON_PUID}
+        - PGID=${LARAVEL_HORIZON_PGID}
+    volumes:
+      - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+      - ./laravel-horizon/supervisord.d:/etc/supervisord.d
+    depends_on:
+      - workspace
+    networks:
+      - backend
+
+  ### PostgreSQL ###########################################
+  postgres:
+    build:
+      context: ./postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
+    hostname: postgres
+    volumes:
+      - ${DATA_PATH_HOST}/postgres:/var/lib/postgresql/data
+      - ${POSTGRES_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - backend
+
+  ### pgAdmin ##############################################
+  pgadmin:
+    image: dpage/pgadmin4
+    hostname: pgadmin
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
+      - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
+    ports:
+      - "${PGADMIN_PORT}:80"
+    volumes:
+      - ${DATA_PATH_HOST}/pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - frontend
+      - backend
+
+  ### Portainer ################################################
+  portainer:
+    build:
+      context: ./portainer
+    command: -H unix:///var/run/docker.sock --no-auth
+    restart: always
+    hostname: portainer
+    volumes:
+      - ${DATA_PATH_HOST}/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - ${PORTAINER_PORT}:9000
+    networks:
+      - frontend
+      - backend
+
+  ### Mailhog ################################################
+  mailhog:
+    build: ./mailhog
+    restart: always
+    hostname: mailhog
+    ports:
+      - "25:1025"
+      - "2525:1025"
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - frontend
+      - backend
