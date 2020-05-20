@@ -36,25 +36,25 @@ RUN set -xe; \
     useradd -u ${PUID} -g dockeruser -m dockeruser && \
     usermod -p "*" dockeruser -s /bin/bash && \
     apt-get install -yqq \
-        apt-utils \
-        locales \
-        tzdata \
-        tmux \
-        xclip \
-        curl \
-        git \
-        zsh \
-        sudo \
-        zsh-syntax-highlighting \
-        powerline \
-        fonts-powerline \
-        # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
-        libzip-dev zip unzip \
-        # Install the zip extension
-        php${PHP_VERSION}-zip \
-        # nasm
-        nasm && \
-        php -m | grep -q 'zip'
+    apt-utils \
+    locales \
+    tzdata \
+    tmux \
+    xclip \
+    curl \
+    git \
+    zsh \
+    sudo \
+    zsh-syntax-highlighting \
+    powerline \
+    fonts-powerline \
+    # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
+    libzip-dev zip unzip \
+    # Install the zip extension
+    php${PHP_VERSION}-zip \
+    # nasm
+    nasm && \
+    php -m | grep -q 'zip'
 
 
 ###########################################################################
@@ -116,7 +116,7 @@ ENV COMPOSER_GLOBAL_INSTALL ${COMPOSER_GLOBAL_INSTALL}
 RUN if [ ${COMPOSER_GLOBAL_INSTALL} = true ]; then \
     # run the install
     composer global install \
-;fi
+    ;fi
 
 # Export composer vendor path
 RUN echo "" >> ~/.bashrc && \
@@ -141,7 +141,7 @@ ARG INSTALL_PHPREDIS=false
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     apt-get update -yqq && \
     apt-get install -yqq php-redis \
-;fi
+    ;fi
 
 ###########################################################################
 # Swoole EXTENSION
@@ -152,18 +152,18 @@ ARG INSTALL_SWOOLE=false
 RUN if [ ${INSTALL_SWOOLE} = true ]; then \
     # Install Php Swoole Extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl -q install swoole-2.0.10; \
+    pecl -q install swoole-2.0.10; \
     else \
-      if [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-        pecl install swoole-2.2.0; \
-      else \
-        pecl install swoole; \
-      fi \
+    if [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
+    pecl install swoole-2.2.0; \
+    else \
+    pecl install swoole; \
+    fi \
     fi && \
     echo "extension=swoole.so" >> /etc/php/${PHP_VERSION}/mods-available/swoole.ini && \
     ln -s /etc/php/${PHP_VERSION}/mods-available/swoole.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-swoole.ini \
     && php -m | grep -q 'swoole' \
-;fi
+    ;fi
 
 ###########################################################################
 # Node / Yarn
@@ -184,7 +184,7 @@ ARG INSTALL_PRESTISSIMO=false
 RUN if [ ${INSTALL_PRESTISSIMO} = true ]; then \
     # Install Prestissimo
     composer global require "hirak/prestissimo" \
-;fi
+    ;fi
 
 ###########################################################################
 # ImageMagick:
@@ -196,7 +196,7 @@ ARG INSTALL_IMAGEMAGICK=false
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     apt-get install -y imagemagick php-imagick \
-;fi
+    ;fi
 
 ###########################################################################
 # pgsql client
@@ -213,7 +213,7 @@ RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get update \
     && apt-get -y install postgresql-client-10 \
-;fi
+    ;fi
 
 ###########################################################################
 # ping:
@@ -226,7 +226,20 @@ ARG INSTALL_PING=false
 RUN if [ ${INSTALL_PING} = true ]; then \
     apt-get update -yqq && \
     apt-get -y install inetutils-ping \
-;fi
+    ;fi
+
+###########################################################################
+# telnet:
+###########################################################################
+
+USER root
+
+ARG INSTALL_TELNET=false
+
+RUN if [ ${INSTALL_TELNET} = true ]; then \
+    apt-get update -yqq && \
+    apt-get -y install telnet \
+    ;fi
 
 ###########################################################################
 # Check PHP version:
@@ -239,9 +252,9 @@ USER dockeruser
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
-  git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
-  ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
-  sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
+    git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
+    ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
+    sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
 
 RUN echo 'ZSH_DISABLE_COMPFIX=true' >> ~/.zshrc
 RUN echo 'SPACESHIP_TIME_SHOW=true' >> ~/.zshrc
@@ -259,6 +272,24 @@ RUN echo "" >> ~/.zshrc && \
     echo "# Load Custom Aliases" >> ~/.zshrc && \
     echo "source ~/aliases.sh" >> ~/.zshrc && \
     echo "" >> ~/.zshrc
+
+###########################################################################
+# SSH Chaves:
+###########################################################################
+
+USER dockeruser
+ARG DATA_PATH_SSH_KEYS=~/.ssh
+COPY ${DATA_PATH_SSH_KEYS} ~/.ssh
+
+###########################################################################
+# GIT config:
+###########################################################################
+
+USER dockeruser
+ARG GIT_GLOBAL_USER_EMAIL="luiz@siffra.com.br"
+ARG GIT_GLOBAL_USER_NAME="Luiz Benevenuto"
+RUN git config --global user.email ${GIT_GLOBAL_USER_EMAIL}
+RUN git config --global user.name ${GIT_GLOBAL_USER_NAME}
 
 USER root
 RUN usermod --shell /bin/zsh root && usermod --shell /bin/zsh dockeruser
