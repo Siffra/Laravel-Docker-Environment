@@ -98,7 +98,6 @@ services:
       args:
         - PHP_VERSION=${PHP_VERSION}
         - SHELL_OH_MY_ZSH=${SHELL_OH_MY_ZSH}
-        - DATA_PATH_SSH_KEYS=${DATA_PATH_SSH_KEYS}
         - INSTALL_PRESTISSIMO=${WORKSPACE_INSTALL_PRESTISSIMO}
         - INSTALL_IMAGEMAGICK=${WORKSPACE_INSTALL_IMAGEMAGICK}
         - INSTALL_PG_CLIENT=${WORKSPACE_INSTALL_PG_CLIENT}
@@ -118,6 +117,7 @@ services:
     hostname: workspace
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
+      - ${DATA_PATH_SSH_KEYS}:/home/dockeruser/.ssh
     networks:
       - backend
       - frontend
