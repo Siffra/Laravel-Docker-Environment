@@ -150,6 +150,8 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
 RUN rm /var/cache/apk/* \
   && mkdir -p /var/www
 
+COPY ./laravel.ini /usr/local/etc/php/conf.d
+
 #
 #--------------------------------------------------------------------------
 # Optional Supervisord Configuration
