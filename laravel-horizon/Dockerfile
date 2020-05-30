@@ -95,6 +95,18 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     &&  docker-php-ext-enable redis \
 ;fi
 
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    apk --update add libxml2-dev php-soap && \
+    docker-php-ext-install soap \
+;fi
+
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
    # Add ffmpeg to horizon

@@ -233,13 +233,13 @@ RUN if [ ${INSTALL_PING} = true ]; then \
 # SOAP:
 ###########################################################################
 
+USER root
+
 ARG INSTALL_SOAP=false
 
 RUN if [ ${INSTALL_SOAP} = true ]; then \
-    # Install the soap extension
-    rm /etc/apt/preferences.d/no-debian-php && \
-    apt-get -y install libxml2-dev php-soap && \
-    docker-php-ext-install soap \
+  # Install the PHP SOAP extension
+  apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
 ;fi
 
 ###########################################################################
