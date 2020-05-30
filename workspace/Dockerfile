@@ -37,6 +37,7 @@ RUN set -xe; \
     usermod -p "*" dockeruser -s /bin/bash && \
     apt-get install -yqq \
     apt-utils \
+    aptitude \
     locales \
     tzdata \
     tmux \
@@ -227,6 +228,19 @@ RUN if [ ${INSTALL_PING} = true ]; then \
     apt-get update -yqq && \
     apt-get -y install inetutils-ping \
     ;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    rm /etc/apt/preferences.d/no-debian-php && \
+    apt-get -y install libxml2-dev php-soap && \
+    docker-php-ext-install soap \
+;fi
 
 ###########################################################################
 # telnet:
