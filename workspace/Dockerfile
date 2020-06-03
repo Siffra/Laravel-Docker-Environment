@@ -44,6 +44,7 @@ RUN set -xe; \
     xclip \
     curl \
     git \
+    git-flow \
     zsh \
     sudo \
     zsh-syntax-highlighting \
