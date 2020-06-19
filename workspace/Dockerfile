@@ -37,12 +37,14 @@ RUN set -xe; \
     usermod -p "*" dockeruser -s /bin/bash && \
     apt-get install -yqq \
     apt-utils \
+    aptitude \
     locales \
     tzdata \
     tmux \
     xclip \
     curl \
     git \
+    git-flow \
     zsh \
     sudo \
     zsh-syntax-highlighting \
@@ -73,11 +75,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 USER root
 
 COPY ./aliases.sh /root/aliases.sh
+COPY ./.tmux.conf /root/.tmux.conf
 COPY ./aliases.sh /home/dockeruser/aliases.sh
+COPY ./.tmux.conf /home/dockeruser/.tmux.conf
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
     sed -i 's/\r//' /home/dockeruser/aliases.sh && \
-    chown dockeruser:dockeruser /home/dockeruser/aliases.sh && \
+    chown dockeruser:dockeruser -R /home/dockeruser && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
@@ -227,6 +231,19 @@ RUN if [ ${INSTALL_PING} = true ]; then \
     apt-get update -yqq && \
     apt-get -y install inetutils-ping \
     ;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+USER root
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+  # Install the PHP SOAP extension
+  apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
+;fi
 
 ###########################################################################
 # telnet:
