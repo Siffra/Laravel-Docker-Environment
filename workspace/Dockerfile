@@ -75,11 +75,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 USER root
 
 COPY ./aliases.sh /root/aliases.sh
+COPY ./.tmux.conf /root/.tmux.conf
 COPY ./aliases.sh /home/dockeruser/aliases.sh
+COPY ./.tmux.conf /home/dockeruser/.tmux.conf
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
     sed -i 's/\r//' /home/dockeruser/aliases.sh && \
-    chown dockeruser:dockeruser /home/dockeruser/aliases.sh && \
+    chown dockeruser:dockeruser -R /home/dockeruser && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
