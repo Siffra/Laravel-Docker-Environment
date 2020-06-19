@@ -4,20 +4,10 @@
 #--------------------------------------------------------------------------
 #
 
-ARG PHP_VERSION
+ARG PHP_VERSION=7.4
 FROM php:${PHP_VERSION}-alpine
 
 LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
-
-ARG PHP_VERSION
-
-# If you're in China, or you need to change sources, will be set CHANGE_SOURCE to true in .env.
-
-ARG CHANGE_SOURCE=false
-RUN if [ ${CHANGE_SOURCE} = true ]; then \
-    # Change application source from dl-cdn.alpinelinux.org to aliyun source
-    sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories \
-;fi
 
 RUN apk --update add wget \
   curl \
@@ -91,11 +81,7 @@ ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
     apk --update add libzip-dev && \
-    if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ]; then \
-      docker-php-ext-configure zip; \
-    else \
-      docker-php-ext-configure zip --with-libzip; \
-    fi && \
+    docker-php-ext-configure zip && \
     # Install the zip extension
     docker-php-ext-install zip \
 ;fi
@@ -107,6 +93,18 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     printf "\n" | pecl install -o -f redis \
     &&  rm -rf /tmp/pear \
     &&  docker-php-ext-enable redis \
+;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    apk --update add libxml2-dev php-soap && \
+    docker-php-ext-install soap \
 ;fi
 
 ARG INSTALL_FFMPEG=false
@@ -163,6 +161,8 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
 
 RUN rm /var/cache/apk/* \
   && mkdir -p /var/www
+
+COPY ./laravel.ini /usr/local/etc/php/conf.d
 
 #
 #--------------------------------------------------------------------------

@@ -1,3 +1,3 @@
 #!zsh
 
-docker-compose exec --user=dockeruser workspace zsh
+docker-compose exec --user=dockeruser workspace tmux
