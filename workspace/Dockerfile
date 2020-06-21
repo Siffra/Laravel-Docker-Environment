@@ -43,6 +43,7 @@ RUN set -xe; \
     tmux \
     xclip \
     curl \
+    wget \
     git \
     git-flow \
     zsh \
@@ -268,7 +269,8 @@ RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 
 ##############################################################################################################################
 USER dockeruser
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
 # RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
 #     git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
@@ -289,7 +291,7 @@ RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTO
     sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"powerlevel10k\/powerlevel10k\"/" ~/.zshrc
 
 RUN echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
-RUN sed --follow-symlinks -i -e "s/\(source \$ZSH\/oh-my-zsh.sh\)/plugins\+\=\(git-flow docker zsh_reload docker-compose gitignore helm perl kubectl cpanm common-aliases nvm npm yarn node composer laravel5 redis-cli supervisor ubuntu sudo debian command-not-found\)\n\1/" ~/.zshrc
+RUN sed --follow-symlinks -i -e "s/\(source \$ZSH\/oh-my-zsh.sh\)/plugins\+\=\(git-flow docker zsh_reload zsh-autosuggestions docker-compose gitignore helm perl kubectl cpanm common-aliases nvm npm yarn node composer laravel5 redis-cli supervisor ubuntu sudo debian command-not-found\)\n\1/" ~/.zshrc
 RUN echo 'export PATH="$PATH:$HOME/.yarn/bin"' >> ~/.zshrc
 
 RUN echo "" >> ~/.zshrc && \
