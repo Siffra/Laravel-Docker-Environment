@@ -48,7 +48,6 @@ RUN set -xe; \
     zsh \
     sudo \
     zsh-syntax-highlighting \
-    zsh-autosuggestions \
     powerline \
     fonts-powerline \
     # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
