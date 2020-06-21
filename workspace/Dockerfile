@@ -48,6 +48,7 @@ RUN set -xe; \
     zsh \
     sudo \
     zsh-syntax-highlighting \
+    zsh-autosuggestions \
     powerline \
     fonts-powerline \
     # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
@@ -74,8 +75,10 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 USER root
 
+COPY .p10k.zsh    /root/.p10k.zsh
 COPY ./aliases.sh /root/aliases.sh
 COPY ./.tmux.conf /root/.tmux.conf
+COPY .p10k.zsh    /home/dockeruser/.p10k.zsh
 COPY ./aliases.sh /home/dockeruser/aliases.sh
 COPY ./.tmux.conf /home/dockeruser/.tmux.conf
 
@@ -241,9 +244,9 @@ USER root
 ARG INSTALL_SOAP=false
 
 RUN if [ ${INSTALL_SOAP} = true ]; then \
-  # Install the PHP SOAP extension
-  apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
-;fi
+    # Install the PHP SOAP extension
+    apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
+    ;fi
 
 ###########################################################################
 # telnet:
@@ -268,19 +271,24 @@ RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 USER dockeruser
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
-    git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
-    ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
-    sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
+# RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
+#     git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
+#     ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
+#     sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
 
 RUN echo 'ZSH_DISABLE_COMPFIX=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_TIME_SHOW=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_BATTERY_SHOW=true' >> ~/.zshrc
-RUN echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_USER_SHOW=always' >> ~/.zshrc
-RUN echo 'SPACESHIP_HOST_SHOW=always' >> ~/.zshrc
 RUN echo 'UPDATE_ZSH_DAYS=1' >> ~/.zshrc
 RUN echo 'HIST_STAMPS="dd.mm.yyyy"' >> ~/.zshrc
+RUN echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
+
+# RUN echo 'SPACESHIP_TIME_SHOW=true' >> ~/.zshrc
+# RUN echo 'SPACESHIP_BATTERY_SHOW=true' >> ~/.zshrc
+# RUN echo 'SPACESHIP_USER_SHOW=always' >> ~/.zshrc
+# RUN echo 'SPACESHIP_HOST_SHOW=always' >> ~/.zshrc
+
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k && \
+    sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"powerlevel10k\/powerlevel10k\"/" ~/.zshrc
+
 RUN echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
 RUN sed --follow-symlinks -i -e "s/\(source \$ZSH\/oh-my-zsh.sh\)/plugins\+\=\(git-flow docker zsh_reload docker-compose gitignore helm perl kubectl cpanm common-aliases nvm npm yarn node composer laravel5 redis-cli supervisor ubuntu sudo debian command-not-found\)\n\1/" ~/.zshrc
 RUN echo 'export PATH="$PATH:$HOME/.yarn/bin"' >> ~/.zshrc
@@ -289,6 +297,11 @@ RUN echo "" >> ~/.zshrc && \
     echo "# Load Custom Aliases" >> ~/.zshrc && \
     echo "source ~/aliases.sh" >> ~/.zshrc && \
     echo "" >> ~/.zshrc
+
+RUN echo "\n" >> ~/.zshrc && \
+    echo '# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.' >> ~/.zshrc && \
+    echo "\n" >> ~/.zshrc && \
+    echo '[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh' >> ~/.zshrc
 
 ###########################################################################
 # GIT config:
