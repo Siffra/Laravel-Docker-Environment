@@ -27,14 +27,15 @@ ARG PUID=1000
 ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
+ENV DOCKER_USER=dockeruser
 
 # always run apt update when start and after add new source list, then clean up at end.
 RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
-    groupadd -g ${PGID} dockeruser && \
-    useradd -u ${PUID} -g dockeruser -m dockeruser && \
-    usermod -p "*" dockeruser -s /bin/bash && \
+    groupadd -g ${PGID} ${DOCKER_USER} && \
+    useradd -u ${PUID} -g ${DOCKER_USER} -m ${DOCKER_USER} && \
+    usermod -p "*" ${DOCKER_USER} -s /bin/bash && \
     apt-get install -yqq \
     apt-utils \
     aptitude \
@@ -78,19 +79,19 @@ USER root
 COPY .p10k.zsh    /root/.p10k.zsh
 COPY ./aliases.sh /root/aliases.sh
 COPY ./.tmux.conf /root/.tmux.conf
-COPY .p10k.zsh    /home/dockeruser/.p10k.zsh
-COPY ./aliases.sh /home/dockeruser/aliases.sh
-COPY ./.tmux.conf /home/dockeruser/.tmux.conf
+COPY .p10k.zsh    /home/${DOCKER_USER}/.p10k.zsh
+COPY ./aliases.sh /home/${DOCKER_USER}/aliases.sh
+COPY ./.tmux.conf /home/${DOCKER_USER}/.tmux.conf
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
-    sed -i 's/\r//' /home/dockeruser/aliases.sh && \
-    chown dockeruser:dockeruser -R /home/dockeruser && \
+    sed -i 's/\r//' /home/${DOCKER_USER}/aliases.sh && \
+    chown ${DOCKER_USER}:${DOCKER_USER} -R /home/${DOCKER_USER} && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
     echo "" >> ~/.bashrc
 
-USER dockeruser
+USER ${DOCKER_USER}
 
 RUN echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
@@ -315,8 +316,9 @@ RUN git config --global user.email ${GIT_GLOBAL_USER_EMAIL}
 RUN git config --global user.name ${GIT_GLOBAL_USER_NAME}
 
 USER root
-RUN usermod --shell /bin/zsh root && usermod --shell /bin/zsh dockeruser
-RUN echo "dockeruser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dockeruser
+ENV PASSWORD=123
+RUN usermod --shell /bin/zsh root && usermod --shell /bin/zsh --password $(openssl passwd -1 ${PASSWORD}) ${DOCKER_USER}
+RUN echo "${DOCKER_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${DOCKER_USER}
 
 COPY --from=exa_build /root/exa/target/release /usr/local/bin
 COPY --from=postgresLatest /usr/lib/postgresql/12/bin/psql /usr/local/bin/psql_12
