@@ -46,8 +46,13 @@ RUN if [ ${INSTALL_BZ2} = true ]; then \
 #Install GD package:
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
-   apk add --update --no-cache libpng-dev; \
-   docker-php-ext-install gd \
+    apk add --update --no-cache libpng libpng-dev freetype freetype-dev libjpeg-turbo libjpeg-turbo-dev && \
+    docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg && \
+    NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+    docker-php-ext-install -j${NPROC} gd && \
+    apk del --no-cache freetype-dev libpng-dev libjpeg-turbo-dev \
 ;fi
 
 #Install GMP package:
@@ -131,6 +136,17 @@ RUN if [ ${INSTALL_YAML} = true ]; then \
      && apk del temp \
 ;fi
 
+
+###########################################################################
+# Exif:
+###########################################################################
+
+ARG INSTALL_EXIF=false
+
+RUN if [ ${INSTALL_EXIF} = true ]; then \
+    # Enable Exif PHP extentions requirements
+    docker-php-ext-install exif \
+;fi
 
 ###########################################################################
 # PHP Memcached:
