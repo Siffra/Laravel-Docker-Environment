@@ -32,8 +32,20 @@ RUN if [ ${INSTALL_ADDITIONAL_LOCALES} = true ]; then \
     && temp="${temp#\"}" \
     && for i in ${temp}; do sed -i "/$i/s/^#//g" /etc/locale.gen; done \
     && locale-gen \
-;fi
+    ;fi
 
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    rm /etc/apt/preferences.d/no-debian-php && \
+    apt-get -y install libxml2-dev php-soap && \
+    docker-php-ext-install soap \
+    ;fi
 
 ###########################################################################
 # pgsql
@@ -44,7 +56,7 @@ ARG INSTALL_PGSQL=false
 RUN if [ ${INSTALL_PGSQL} = true ]; then \
     # Install the pgsql extension
     docker-php-ext-install pgsql \
-;fi
+    ;fi
 
 ###########################################################################
 # GD:
@@ -93,7 +105,7 @@ ARG INSTALL_OPCACHE=false
 
 RUN if [ ${INSTALL_OPCACHE} = true ]; then \
     docker-php-ext-install opcache \
-;fi
+    ;fi
 
 # Copy opcache configration
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
@@ -107,13 +119,13 @@ ARG INSTALL_PHPREDIS=false
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     # Install Php Redis Extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install -o -f redis-4.3.0; \
+    pecl install -o -f redis-4.3.0; \
     else \
-      pecl install -o -f redis; \
+    pecl install -o -f redis; \
     fi \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis \
-;fi
+    ;fi
 
 ###########################################################################
 # Check PHP version:

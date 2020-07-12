@@ -7,8 +7,21 @@
 ARG PHP_VERSION=7.4
 FROM php:${PHP_VERSION}-alpine
 
-LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
+LABEL maintainer="Luiz Benevenuto <luiz@siffra.com.br>"
 
+<<<<<<< HEAD
+ARG PHP_VERSION
+
+# If you're in China, or you need to change sources, will be set CHANGE_SOURCE to true in .env.
+
+ARG CHANGE_SOURCE=false
+RUN if [ ${CHANGE_SOURCE} = true ]; then \
+  # Change application source from dl-cdn.alpinelinux.org to aliyun source
+  sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories \
+  ;fi
+
+=======
+>>>>>>> release/0.0.2
 RUN apk --update add wget \
   curl \
   git \
@@ -34,14 +47,14 @@ ARG PGID=1000
 ENV PGID ${PGID}
 
 RUN addgroup -g ${PGID} dockeruser && \
-    adduser -D -G dockeruser -u ${PUID} dockeruser
+  adduser -D -G dockeruser -u ${PUID} dockeruser
 
 #Install BZ2:
 ARG INSTALL_BZ2=false
 RUN if [ ${INSTALL_BZ2} = true ]; then \
   apk --update add bzip2-dev; \
   docker-php-ext-install bz2 \
-;fi
+  ;fi
 
 #Install GD package:
 ARG INSTALL_GD=false
@@ -58,9 +71,9 @@ RUN if [ ${INSTALL_GD} = true ]; then \
 #Install GMP package:
 ARG INSTALL_GMP=false
 RUN if [ ${INSTALL_GMP} = true ]; then \
-   apk add --update --no-cache gmp gmp-dev; \
-   docker-php-ext-install gmp \
-;fi
+  apk add --update --no-cache gmp gmp-dev; \
+  docker-php-ext-install gmp \
+  ;fi
 
 #Install BCMath package:
 ARG INSTALL_BCMATH=false
@@ -81,24 +94,42 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
   && docker-php-ext-install pdo_pgsql \
   ;fi
 
+#Install SOAP package:
+ARG INSTALL_SOAP=false
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+  docker-php-ext-install soap \
+  ;fi
+
 # Install ZipArchive:
 ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
+<<<<<<< HEAD
+  apk --update add libzip-dev && \
+  if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ]; then \
+  docker-php-ext-configure zip; \
+  else \
+  docker-php-ext-configure zip --with-libzip; \
+  fi && \
+  # Install the zip extension
+  docker-php-ext-install zip \
+  ;fi
+=======
     apk --update add libzip-dev && \
     docker-php-ext-configure zip && \
     # Install the zip extension
     docker-php-ext-install zip \
 ;fi
+>>>>>>> release/0.0.2
 
 # Install PhpRedis package:
 ARG INSTALL_PHPREDIS=false
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
-    # Install Php Redis Extension
-    printf "\n" | pecl install -o -f redis \
-    &&  rm -rf /tmp/pear \
-    &&  docker-php-ext-enable redis \
-;fi
+  # Install Php Redis Extension
+  printf "\n" | pecl install -o -f redis \
+  &&  rm -rf /tmp/pear \
+  &&  docker-php-ext-enable redis \
+  ;fi
 
 ###########################################################################
 # SOAP:
@@ -114,9 +145,9 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
 
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
-   # Add ffmpeg to horizon
-    apk add ffmpeg \
-;fi
+  # Add ffmpeg to horizon
+  apk add ffmpeg \
+  ;fi
 
 ###########################################################################
 # YAML: extension
@@ -125,16 +156,16 @@ RUN if [ ${INSTALL_FFMPEG} = true ]; then \
 ARG INSTALL_YAML=false
 
 RUN if [ ${INSTALL_YAML} = true ]; then \
-     apk --update add -U --no-cache --virtual temp yaml-dev \
-     && apk add --no-cache yaml \
-     && docker-php-source extract \
-     && pecl channel-update pecl.php.net \
-     && pecl install yaml \
-     && docker-php-ext-enable yaml \
-     && pecl clear-cache \
-     && docker-php-source delete \
-     && apk del temp \
-;fi
+  apk --update add -U --no-cache --virtual temp yaml-dev \
+  && apk add --no-cache yaml \
+  && docker-php-source extract \
+  && pecl channel-update pecl.php.net \
+  && pecl install yaml \
+  && docker-php-ext-enable yaml \
+  && pecl clear-cache \
+  && docker-php-source delete \
+  && apk del temp \
+  ;fi
 
 
 ###########################################################################
