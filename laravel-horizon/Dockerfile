@@ -4,11 +4,12 @@
 #--------------------------------------------------------------------------
 #
 
-ARG PHP_VERSION
+ARG PHP_VERSION=7.4
 FROM php:${PHP_VERSION}-alpine
 
 LABEL maintainer="Luiz Benevenuto <luiz@siffra.com.br>"
 
+<<<<<<< HEAD
 ARG PHP_VERSION
 
 # If you're in China, or you need to change sources, will be set CHANGE_SOURCE to true in .env.
@@ -19,6 +20,8 @@ RUN if [ ${CHANGE_SOURCE} = true ]; then \
   sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories \
   ;fi
 
+=======
+>>>>>>> release/0.0.2
 RUN apk --update add wget \
   curl \
   git \
@@ -56,9 +59,14 @@ RUN if [ ${INSTALL_BZ2} = true ]; then \
 #Install GD package:
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
-  apk add --update --no-cache libpng-dev; \
-  docker-php-ext-install gd \
-  ;fi
+    apk add --update --no-cache libpng libpng-dev freetype freetype-dev libjpeg-turbo libjpeg-turbo-dev && \
+    docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg && \
+    NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+    docker-php-ext-install -j${NPROC} gd && \
+    apk del --no-cache freetype-dev libpng-dev libjpeg-turbo-dev \
+;fi
 
 #Install GMP package:
 ARG INSTALL_GMP=false
@@ -96,6 +104,7 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
 ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
+<<<<<<< HEAD
   apk --update add libzip-dev && \
   if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ]; then \
   docker-php-ext-configure zip; \
@@ -105,6 +114,13 @@ RUN set -eux; \
   # Install the zip extension
   docker-php-ext-install zip \
   ;fi
+=======
+    apk --update add libzip-dev && \
+    docker-php-ext-configure zip && \
+    # Install the zip extension
+    docker-php-ext-install zip \
+;fi
+>>>>>>> release/0.0.2
 
 # Install PhpRedis package:
 ARG INSTALL_PHPREDIS=false
@@ -114,6 +130,18 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
   &&  rm -rf /tmp/pear \
   &&  docker-php-ext-enable redis \
   ;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    apk --update add libxml2-dev php-soap && \
+    docker-php-ext-install soap \
+;fi
 
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
@@ -139,6 +167,17 @@ RUN if [ ${INSTALL_YAML} = true ]; then \
   && apk del temp \
   ;fi
 
+
+###########################################################################
+# Exif:
+###########################################################################
+
+ARG INSTALL_EXIF=false
+
+RUN if [ ${INSTALL_EXIF} = true ]; then \
+    # Enable Exif PHP extentions requirements
+    docker-php-ext-install exif \
+;fi
 
 ###########################################################################
 # PHP Memcached:
@@ -169,6 +208,8 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
 
 RUN rm /var/cache/apk/* \
   && mkdir -p /var/www
+
+COPY ./laravel.ini /usr/local/etc/php/conf.d
 
 #
 #--------------------------------------------------------------------------

@@ -27,34 +27,38 @@ ARG PUID=1000
 ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
+ENV DOCKER_USER=dockeruser
 
 # always run apt update when start and after add new source list, then clean up at end.
 RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
-    groupadd -g ${PGID} dockeruser && \
-    useradd -u ${PUID} -g dockeruser -m dockeruser && \
-    usermod -p "*" dockeruser -s /bin/bash && \
+    groupadd -g ${PGID} ${DOCKER_USER} && \
+    useradd -u ${PUID} -g ${DOCKER_USER} -m ${DOCKER_USER} && \
+    usermod -p "*" ${DOCKER_USER} -s /bin/bash && \
     apt-get install -yqq \
-        apt-utils \
-        locales \
-        tzdata \
-        tmux \
-        xclip \
-        curl \
-        git \
-        zsh \
-        sudo \
-        zsh-syntax-highlighting \
-        powerline \
-        fonts-powerline \
-        # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
-        libzip-dev zip unzip \
-        # Install the zip extension
-        php${PHP_VERSION}-zip \
-        # nasm
-        nasm && \
-        php -m | grep -q 'zip'
+    apt-utils \
+    aptitude \
+    locales \
+    tzdata \
+    tmux \
+    xclip \
+    curl \
+    wget \
+    git \
+    git-flow \
+    zsh \
+    sudo \
+    zsh-syntax-highlighting \
+    powerline \
+    fonts-powerline \
+    # next lines are here becase there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
+    libzip-dev zip unzip \
+    # Install the zip extension
+    php${PHP_VERSION}-zip \
+    # nasm
+    nasm && \
+    php -m | grep -q 'zip'
 
 
 ###########################################################################
@@ -72,18 +76,22 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 USER root
 
+COPY .p10k.zsh    /root/.p10k.zsh
 COPY ./aliases.sh /root/aliases.sh
-COPY ./aliases.sh /home/dockeruser/aliases.sh
+COPY ./.tmux.conf /root/.tmux.conf
+COPY .p10k.zsh    /home/${DOCKER_USER}/.p10k.zsh
+COPY ./aliases.sh /home/${DOCKER_USER}/aliases.sh
+COPY ./.tmux.conf /home/${DOCKER_USER}/.tmux.conf
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
-    sed -i 's/\r//' /home/dockeruser/aliases.sh && \
-    chown dockeruser:dockeruser /home/dockeruser/aliases.sh && \
+    sed -i 's/\r//' /home/${DOCKER_USER}/aliases.sh && \
+    chown ${DOCKER_USER}:${DOCKER_USER} -R /home/${DOCKER_USER} && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
     echo "" >> ~/.bashrc
 
-USER dockeruser
+USER ${DOCKER_USER}
 
 RUN echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
@@ -116,7 +124,7 @@ ENV COMPOSER_GLOBAL_INSTALL ${COMPOSER_GLOBAL_INSTALL}
 RUN if [ ${COMPOSER_GLOBAL_INSTALL} = true ]; then \
     # run the install
     composer global install \
-;fi
+    ;fi
 
 # Export composer vendor path
 RUN echo "" >> ~/.bashrc && \
@@ -141,7 +149,7 @@ ARG INSTALL_PHPREDIS=false
 RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     apt-get update -yqq && \
     apt-get install -yqq php-redis \
-;fi
+    ;fi
 
 ###########################################################################
 # Swoole EXTENSION
@@ -152,18 +160,18 @@ ARG INSTALL_SWOOLE=false
 RUN if [ ${INSTALL_SWOOLE} = true ]; then \
     # Install Php Swoole Extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl -q install swoole-2.0.10; \
+    pecl -q install swoole-2.0.10; \
     else \
-      if [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-        pecl install swoole-2.2.0; \
-      else \
-        pecl install swoole; \
-      fi \
+    if [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
+    pecl install swoole-2.2.0; \
+    else \
+    pecl install swoole; \
+    fi \
     fi && \
     echo "extension=swoole.so" >> /etc/php/${PHP_VERSION}/mods-available/swoole.ini && \
     ln -s /etc/php/${PHP_VERSION}/mods-available/swoole.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-swoole.ini \
     && php -m | grep -q 'swoole' \
-;fi
+    ;fi
 
 ###########################################################################
 # Node / Yarn
@@ -184,7 +192,7 @@ ARG INSTALL_PRESTISSIMO=false
 RUN if [ ${INSTALL_PRESTISSIMO} = true ]; then \
     # Install Prestissimo
     composer global require "hirak/prestissimo" \
-;fi
+    ;fi
 
 ###########################################################################
 # ImageMagick:
@@ -196,7 +204,7 @@ ARG INSTALL_IMAGEMAGICK=false
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     apt-get install -y imagemagick php-imagick \
-;fi
+    ;fi
 
 ###########################################################################
 # pgsql client
@@ -213,7 +221,7 @@ RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get update \
     && apt-get -y install postgresql-client-10 \
-;fi
+    ;fi
 
 ###########################################################################
 # SOAP:
@@ -239,7 +247,33 @@ ARG INSTALL_PING=false
 RUN if [ ${INSTALL_PING} = true ]; then \
     apt-get update -yqq && \
     apt-get -y install inetutils-ping \
-;fi
+    ;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+USER root
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the PHP SOAP extension
+    apt-get -y install libxml2-dev php${PHP_VERSION}-soap \
+    ;fi
+
+###########################################################################
+# telnet:
+###########################################################################
+
+USER root
+
+ARG INSTALL_TELNET=false
+
+RUN if [ ${INSTALL_TELNET} = true ]; then \
+    apt-get update -yqq && \
+    apt-get -y install telnet \
+    ;fi
 
 ###########################################################################
 # Check PHP version:
@@ -249,23 +283,29 @@ RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}."
 
 ##############################################################################################################################
 USER dockeruser
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
-RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
-  git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
-  ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
-  sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
+# RUN ZSH_CUSTOM="$HOME/.oh-my-zsh" && \
+#     git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt" && \
+#     ln -s "$ZSH_CUSTOM/themes/spaceship-prompt/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme" && \
+#     sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"spaceship\"/" ~/.zshrc
 
 RUN echo 'ZSH_DISABLE_COMPFIX=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_TIME_SHOW=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_BATTERY_SHOW=true' >> ~/.zshrc
-RUN echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
-RUN echo 'SPACESHIP_USER_SHOW=always' >> ~/.zshrc
-RUN echo 'SPACESHIP_HOST_SHOW=always' >> ~/.zshrc
 RUN echo 'UPDATE_ZSH_DAYS=1' >> ~/.zshrc
 RUN echo 'HIST_STAMPS="dd.mm.yyyy"' >> ~/.zshrc
+RUN echo 'DISABLE_UPDATE_PROMPT=true' >> ~/.zshrc
+
+# RUN echo 'SPACESHIP_TIME_SHOW=true' >> ~/.zshrc
+# RUN echo 'SPACESHIP_BATTERY_SHOW=true' >> ~/.zshrc
+# RUN echo 'SPACESHIP_USER_SHOW=always' >> ~/.zshrc
+# RUN echo 'SPACESHIP_HOST_SHOW=always' >> ~/.zshrc
+
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k && \
+    sed --follow-symlinks -i -r -e "s/^(ZSH_THEME=).*/\1\"powerlevel10k\/powerlevel10k\"/" ~/.zshrc
+
 RUN echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
-RUN sed --follow-symlinks -i -e "s/\(source \$ZSH\/oh-my-zsh.sh\)/plugins\+\=\(git-flow docker zsh_reload docker-compose gitignore helm perl kubectl cpanm common-aliases nvm npm yarn node composer laravel5 redis-cli supervisor ubuntu sudo debian command-not-found\)\n\1/" ~/.zshrc
+RUN sed --follow-symlinks -i -e "s/\(source \$ZSH\/oh-my-zsh.sh\)/plugins\+\=\(git-flow docker zsh_reload zsh-autosuggestions docker-compose gitignore helm perl kubectl cpanm common-aliases nvm npm yarn node composer laravel5 redis-cli supervisor ubuntu sudo debian command-not-found\)\n\1/" ~/.zshrc
 RUN echo 'export PATH="$PATH:$HOME/.yarn/bin"' >> ~/.zshrc
 
 RUN echo "" >> ~/.zshrc && \
@@ -273,9 +313,25 @@ RUN echo "" >> ~/.zshrc && \
     echo "source ~/aliases.sh" >> ~/.zshrc && \
     echo "" >> ~/.zshrc
 
+RUN echo "\n" >> ~/.zshrc && \
+    echo '# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.' >> ~/.zshrc && \
+    echo "\n" >> ~/.zshrc && \
+    echo '[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh' >> ~/.zshrc
+
+###########################################################################
+# GIT config:
+###########################################################################
+
+USER dockeruser
+ARG GIT_GLOBAL_USER_EMAIL="luiz@siffra.com.br"
+ARG GIT_GLOBAL_USER_NAME="Luiz Benevenuto"
+RUN git config --global user.email ${GIT_GLOBAL_USER_EMAIL}
+RUN git config --global user.name ${GIT_GLOBAL_USER_NAME}
+
 USER root
-RUN usermod --shell /bin/zsh root && usermod --shell /bin/zsh dockeruser
-RUN echo "dockeruser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dockeruser
+ENV PASSWORD=123
+RUN usermod --shell /bin/zsh root && usermod --shell /bin/zsh --password $(openssl passwd -1 ${PASSWORD}) ${DOCKER_USER}
+RUN echo "${DOCKER_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${DOCKER_USER}
 
 COPY --from=exa_build /root/exa/target/release /usr/local/bin
 COPY --from=postgresLatest /usr/lib/postgresql/12/bin/psql /usr/local/bin/psql_12

@@ -59,6 +59,45 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
     ;fi
 
 ###########################################################################
+# GD:
+###########################################################################
+
+ARG INSTALL_GD=false
+
+RUN if [ ${INSTALL_GD} = true ]; then \
+        apt-get update && apt-get install -y \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
+;fi
+
+###########################################################################
+# SOAP:
+###########################################################################
+
+ARG INSTALL_SOAP=false
+
+RUN if [ ${INSTALL_SOAP} = true ]; then \
+    # Install the soap extension
+    rm /etc/apt/preferences.d/no-debian-php && \
+    apt-get -y install libxml2-dev php-soap && \
+    docker-php-ext-install soap \
+;fi
+
+###########################################################################
+# Exif:
+###########################################################################
+
+ARG INSTALL_EXIF=false
+
+RUN if [ ${INSTALL_EXIF} = true ]; then \
+    # Enable Exif PHP extentions requirements
+    docker-php-ext-install exif \
+;fi
+
+###########################################################################
 # Opcache:
 ###########################################################################
 
