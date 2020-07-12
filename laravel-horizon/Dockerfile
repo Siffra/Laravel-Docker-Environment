@@ -91,23 +91,11 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
 ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
-<<<<<<< HEAD
-  apk --update add libzip-dev && \
-  if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ]; then \
-  docker-php-ext-configure zip; \
-  else \
-  docker-php-ext-configure zip --with-libzip; \
-  fi && \
-  # Install the zip extension
-  docker-php-ext-install zip \
-  ;fi
-=======
     apk --update add libzip-dev && \
     docker-php-ext-configure zip && \
     # Install the zip extension
     docker-php-ext-install zip \
 ;fi
->>>>>>> release/0.0.2
 
 # Install PhpRedis package:
 ARG INSTALL_PHPREDIS=false
