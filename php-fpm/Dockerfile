@@ -26,7 +26,7 @@ ARG INSTALL_ADDITIONAL_LOCALES=false
 ARG ADDITIONAL_LOCALES
 
 RUN if [ ${INSTALL_ADDITIONAL_LOCALES} = true ]; then \
-    apt-get install -y locales \
+    apt-get install -y locales git \
     && echo '' >> /usr/share/locale/locale.alias \
     && temp="${ADDITIONAL_LOCALES%\"}" \
     && temp="${temp#\"}" \
