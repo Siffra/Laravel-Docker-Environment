@@ -195,7 +195,7 @@ services:
   portainer:
     build:
       context: ./portainer
-    command: -H unix:///var/run/docker.sock --no-auth
+    command: -H unix:///var/run/docker.sock --admin-password='$2y$05$LSnHKtHBIUWH1iM.bMsC0.rEdySz0pap3i.sVKn2pfb5I1ddRwetu'
     restart: always
     hostname: portainer
     volumes:
