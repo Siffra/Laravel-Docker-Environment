@@ -4,6 +4,12 @@ ARG BASE_IMAGE_TAG_PREFIX=latest
 FROM postgres:12 as postgresLatest
 RUN echo ${PG_VERSION}
 
+# Build EXA
+FROM rust as exa_build
+
+# Clone the git repo, checkout v0.8.0 (commit 877265b) and build the binary
+RUN cd /root && git clone https://github.com/ogham/exa && cd exa && cargo build --release --no-default-features
+
 # FINAL
 FROM laradock/workspace:${BASE_IMAGE_TAG_PREFIX}-${PHP_VERSION} as Final
 
@@ -36,7 +42,6 @@ RUN set -xe; \
     locales \
     tzdata \
     tmux \
-    exa \
     xclip \
     curl \
     wget \
