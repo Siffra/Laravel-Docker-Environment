@@ -241,3 +241,10 @@ services:
       - TZ=America/Sao_Paulo
     networks:
       - backend
+
+  ### Adminer ###########################################
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8085:8080
