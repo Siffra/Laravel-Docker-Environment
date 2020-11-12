@@ -18,3 +18,5 @@
 !/.devcontainer/docker-compose.extend-example.yml
 
 .DS_Store
+
+start_workspace.sh
