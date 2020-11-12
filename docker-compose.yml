@@ -89,6 +89,7 @@ services:
       - "${NGINX_HOST_HTTPS_PORT}:443"
     depends_on:
       - php-fpm
+      - laravel-horizon
     networks:
       - frontend
       - backend
@@ -120,6 +121,8 @@ services:
     volumes:
       - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}
       - ${DATA_PATH_SSH_KEYS}:/home/dockeruser/.ssh
+    depends_on:
+      - nginx
     networks:
       - backend
       - frontend
@@ -252,3 +255,5 @@ services:
       - ADMINER_DEFAULT_SERVER=mysql
     networks:
       - backend
+    depends_on:
+      - mysql
