@@ -9,7 +9,7 @@ FROM php:${PHP_VERSION}-alpine
 
 LABEL maintainer="Luiz Benevenuto <luiz@siffra.com.br>"
 
-RUN apk add --no-cache --update --virtual buildDeps autoconf \
+RUN apk --update add wget \
   curl \
   git \
   build-base \
