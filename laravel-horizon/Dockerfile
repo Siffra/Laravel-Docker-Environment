@@ -9,7 +9,7 @@ FROM php:${PHP_VERSION}-alpine
 
 LABEL maintainer="Luiz Benevenuto <luiz@siffra.com.br>"
 
-RUN apk --update add wget \
+RUN add --no-cache --update --virtual buildDeps autoconf \
   curl \
   git \
   build-base \
@@ -46,14 +46,14 @@ RUN if [ ${INSTALL_BZ2} = true ]; then \
 #Install GD package:
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
-    apk add --update --no-cache libpng libpng-dev freetype freetype-dev libjpeg-turbo libjpeg-turbo-dev && \
-    docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg && \
-    NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
-    docker-php-ext-install -j${NPROC} gd && \
-    apk del --no-cache freetype-dev libpng-dev libjpeg-turbo-dev \
-;fi
+  apk add --update --no-cache libpng libpng-dev freetype freetype-dev libjpeg-turbo libjpeg-turbo-dev && \
+  docker-php-ext-configure gd \
+  --with-freetype \
+  --with-jpeg && \
+  NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+  docker-php-ext-install -j${NPROC} gd && \
+  apk del --no-cache freetype-dev libpng-dev libjpeg-turbo-dev \
+  ;fi
 
 #Install GMP package:
 ARG INSTALL_GMP=false
@@ -91,11 +91,11 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
 ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
-    apk --update add libzip-dev && \
-    docker-php-ext-configure zip && \
-    # Install the zip extension
-    docker-php-ext-install zip \
-;fi
+  apk --update add libzip-dev && \
+  docker-php-ext-configure zip && \
+  # Install the zip extension
+  docker-php-ext-install zip \
+  ;fi
 
 # Install PhpRedis package:
 ARG INSTALL_PHPREDIS=false
@@ -113,10 +113,10 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
 ARG INSTALL_SOAP=false
 
 RUN if [ ${INSTALL_SOAP} = true ]; then \
-    # Install the soap extension
-    apk --update add libxml2-dev php-soap && \
-    docker-php-ext-install soap \
-;fi
+  # Install the soap extension
+  apk --update add libxml2-dev php-soap && \
+  docker-php-ext-install soap \
+  ;fi
 
 ARG INSTALL_FFMPEG=false
 RUN if [ ${INSTALL_FFMPEG} = true ]; then \
@@ -150,9 +150,9 @@ RUN if [ ${INSTALL_YAML} = true ]; then \
 ARG INSTALL_EXIF=false
 
 RUN if [ ${INSTALL_EXIF} = true ]; then \
-    # Enable Exif PHP extentions requirements
-    docker-php-ext-install exif \
-;fi
+  # Enable Exif PHP extentions requirements
+  docker-php-ext-install exif \
+  ;fi
 
 ###########################################################################
 # PHP Memcached:
