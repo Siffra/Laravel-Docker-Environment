@@ -10,19 +10,19 @@ FROM php:${PHP_VERSION}-alpine
 LABEL maintainer="Luiz Benevenuto <luiz@siffra.com.br>"
 
 RUN apk --update add wget
-RUN apk --update add curl
-RUN apk --update add git
-RUN apk --update add build-base
-RUN apk --update add libmemcached-dev
-RUN apk --update add libmcrypt-dev
-RUN apk --update add libxml2-dev
-RUN apk --update add zlib-dev
-RUN apk --update add autoconf
-RUN apk --update add cyrus-sasl-dev
-RUN apk --update add libgsasl-dev
-RUN apk --update add supervisor
-RUN apk --update add oniguruma-dev
-RUN apk --update add procps
+RUN apk add curl
+RUN apk add git
+RUN apk add build-base
+RUN apk add libmemcached-dev
+RUN apk add libmcrypt-dev
+RUN apk add libxml2-dev
+RUN apk add zlib-dev
+RUN apk add autoconf
+RUN apk add cyrus-sasl-dev
+RUN apk add libgsasl-dev
+RUN apk add supervisor
+RUN apk add oniguruma-dev
+RUN apk add procps
 
 RUN docker-php-ext-install mysqli mbstring pdo pdo_mysql tokenizer xml pcntl
 RUN pecl channel-update pecl.php.net && pecl install memcached mcrypt-1.0.1 && docker-php-ext-enable memcached
