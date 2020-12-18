@@ -32,7 +32,7 @@ RUN if [ ${INSTALL_ADDITIONAL_LOCALES} = true ]; then \
     && temp="${temp#\"}" \
     && for i in ${temp}; do sed -i "/$i/s/^#//g" /etc/locale.gen; done \
     && locale-gen \
-;fi
+    ;fi
 
 ###########################################################################
 # pgsql
@@ -52,13 +52,13 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
 ARG INSTALL_GD=false
 
 RUN if [ ${INSTALL_GD} = true ]; then \
-        apt-get update && apt-get install -y \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
+    apt-get update && apt-get install -y \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd \
-;fi
+    ;fi
 
 ###########################################################################
 # SOAP:
@@ -72,7 +72,7 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
     apt-get update -yqq && \
     apt-get -y install libxml2-dev php-soap && \
     docker-php-ext-install soap \
-;fi
+    ;fi
 
 ###########################################################################
 # Exif:
@@ -83,7 +83,7 @@ ARG INSTALL_EXIF=false
 RUN if [ ${INSTALL_EXIF} = true ]; then \
     # Enable Exif PHP extentions requirements
     docker-php-ext-install exif \
-;fi
+    ;fi
 
 ###########################################################################
 # Opcache:
@@ -119,7 +119,7 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
 # Check PHP version:
 ###########################################################################
 
-RUN set -xe; php -v | head -n 1 | grep -q "PHP 7.4"
+RUN set -xe; php -v | head -n 1 | grep -q "PHP ${PHP_VERSION}"
 
 #
 #--------------------------------------------------------------------------
