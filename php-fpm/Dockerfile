@@ -116,6 +116,23 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     ;fi
 
 ###########################################################################
+# MongoDB:
+###########################################################################
+
+ARG INSTALL_MONGO=false
+
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+    # Install the mongodb extension
+    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
+    pecl install mongo && \
+    docker-php-ext-enable mongo \
+    ;else \
+    pecl install mongodb && \
+    docker-php-ext-enable mongodb \
+    ;fi \
+    ;fi
+
+###########################################################################
 # Check PHP version:
 ###########################################################################
 
