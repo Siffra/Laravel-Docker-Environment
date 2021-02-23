@@ -1,4 +1,4 @@
-ARG PHP_VERSION=7.4
+ARG PHP_VERSION=8.0
 ARG BASE_IMAGE_TAG_PREFIX=latest
 
 FROM postgres:12 as postgresLatest
@@ -14,6 +14,8 @@ RUN cd /root && git clone https://github.com/ogham/exa && cd exa && cargo build 
 FROM laradock/workspace:${BASE_IMAGE_TAG_PREFIX}-${PHP_VERSION} as Final
 
 LABEL maintainer="Luiz Benevenuto <luiz@hy.st>"
+
+ARG PHP_VERSION
 
 # Set Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
@@ -34,7 +36,7 @@ RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
     groupadd -g ${PGID} ${DOCKER_USER} && \
-    useradd -u ${PUID} -g ${DOCKER_USER} -m ${DOCKER_USER} && \
+    useradd -l -u ${PUID} -g ${DOCKER_USER} -m ${DOCKER_USER} -G docker_env && \
     usermod -p "*" ${DOCKER_USER} -s /bin/bash && \
     apt-get install -yqq \
     apt-utils \
@@ -203,15 +205,15 @@ ARG INSTALL_MONGO=false
 RUN if [ ${INSTALL_MONGO} = true ]; then \
     # Install the mongodb extension
     if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-    pecl install mongo && \
-    echo "extension=mongo.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongo.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongo.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-mongo.ini \
+      pecl install mongo && \
+      echo "extension=mongo.so" >> /etc/php/${PHP_VERSION}/mods-available/mongo.ini && \
+      ln -s /etc/php/${PHP_VERSION}/mods-available/mongo.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongo.ini \
     ;else \
-    pecl install mongodb && \
-    echo "extension=mongodb.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongodb.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/mongodb.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-mongodb.ini \
+      pecl install mongodb && \
+      echo "extension=mongodb.so" >> /etc/php/${PHP_VERSION}/mods-available/mongodb.ini && \
+      ln -s /etc/php/${PHP_VERSION}/mods-available/mongodb.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongodb.ini \
     ;fi \
-    ;fi
+;fi
 
 ###########################################################################
 # ImageMagick:
