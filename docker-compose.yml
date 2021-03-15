@@ -181,7 +181,7 @@ services:
 
   ### pgAdmin ##############################################
   pgadmin:
-    image: ./pgadmin
+    build: pgadmin
     restart: always
     container_name: pgadmin
     hostname: pgadmin
