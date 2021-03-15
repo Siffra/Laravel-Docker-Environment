@@ -181,7 +181,7 @@ services:
 
   ### pgAdmin ##############################################
   pgadmin:
-    image: dpage/pgadmin4
+    image: pgadmin
     hostname: pgadmin
     environment:
       - 'PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}'
