@@ -183,7 +183,6 @@ services:
   pgadmin:
     build: pgadmin
     restart: always
-    container_name: pgadmin
     hostname: pgadmin
     environment:
       - 'PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}'
