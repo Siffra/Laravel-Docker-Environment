@@ -44,7 +44,7 @@ ARG PGID=1000
 ENV PGID ${PGID}
 ENV DOCKER_USER=dockeruser
 
-RUN addgroup -g ${PGID} ${DOCKER_USER}} && adduser -D -G ${DOCKER_USER}} -u ${PUID} ${DOCKER_USER}}
+RUN addgroup -g ${PGID} ${DOCKER_USER} && adduser -D -G ${DOCKER_USER} -u ${PUID} ${DOCKER_USER}
 
 #Install BZ2:
 ARG INSTALL_BZ2=false
