@@ -42,9 +42,9 @@ ARG PUID=1000
 ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
+ENV DOCKER_USER=dockeruser
 
-RUN addgroup -g ${PGID} laradock && \
-  adduser -D -G laradock -u ${PUID} laradock
+RUN addgroup -g ${PGID} ${DOCKER_USER}} && adduser -D -G ${DOCKER_USER}} -u ${PUID} ${DOCKER_USER}}
 
 #Install BZ2:
 ARG INSTALL_BZ2=false
