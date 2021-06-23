@@ -101,7 +101,7 @@ ARG INSTALL_ZIP_ARCHIVE=false
 RUN set -eux; \
   if [ ${INSTALL_ZIP_ARCHIVE} = true ]; then \
   apk --update add libzip-dev && \
-  if [ ${PHP_VERSION} = "7.3" ] || [ ${PHP_VERSION} = "7.4" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
+  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] || [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
   docker-php-ext-configure zip; \
   else \
   docker-php-ext-configure zip --with-libzip; \
